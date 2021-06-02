@@ -1,75 +1,132 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import React, { Component } from 'react';
+import React, { Component, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { Canvas, extend, useFrame, useThree } from 'react-three-fiber';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import './App.css'
+extend({ OrbitControls });
 
-
-
-class Viewer extends Component{
-
-
-  componentDidMount(){
-    const width = this.mount.clientWidth
-    const height = this.mount.clientHeight
-
-    //ADD SCENE
-    this.scene = new THREE.Scene()
-
-    //ADD CAMERA
-    this.camera = new THREE.PerspectiveCamera(
-      75,
-      width / height,
-      0.1,
-      1000
-    )
-    this.camera.position.z = 3
-    this.camera.position.y = 0.5
-
-    //ADD RENDERER
-    this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setClearColor('#888888')
-    this.renderer.setSize(width, height)
-    this.mount.appendChild(this.renderer.domElement)
-
-      
-    //ADD LIGHT
-    const color = 0xFFFFFF;
-    const intensity = .7;
-    const light = new THREE.AmbientLight(color, intensity);
-    this.scene.add(light);
-
-    //ADD CUBE
-  
-
-    //ADD OBJECT
-    const loader = new GLTFLoader();
-      loader.load('./untitled.gltf', (object) => {
-        this.scene.add(object.scene);
-      });
-
-    this.animate();
-
-  }
-
-  
-
-  animate = () => {
-   this.renderScene()
-   this.frameId = window.requestAnimationFrame(this.animate)
- }
-
-  renderScene = () => {
-    this.renderer.render(this.scene, this.camera)
-  }
-
-
-  render(){
-    return(
-      <div
-        style={{ width: window.innerWidth, height: window.innerHeight }}
-        ref={(mount) => { this.mount = mount }}
+// Geometry
+function GroundPlane() {
+  return (
+    <mesh receiveShadow rotation={[5, 0, 0]} position={[0, -1, 0]}>
+      <planeBufferGeometry attach="geometry" args={[500, 500]} />
+      <meshStandardMaterial attach="material" color="white" />
+    </mesh>
+  );
+}
+function BackDrop() {
+  return (
+    <mesh receiveShadow position={[0, -1, -5]}>
+      <planeBufferGeometry attach="geometry" args={[500, 500]} />
+      <meshStandardMaterial attach="material" color="white" />
+    </mesh>
+  );
+}
+function Sphere() {
+  return (
+    <mesh
+      visible
+      userData={{ test: "hello" }}
+      position={[0, 0, 0]}
+      rotation={[0, 0, 0]}
+      castShadow
+    >
+      <sphereGeometry attach="geometry" args={[1, 16, 16]} />
+      <meshStandardMaterial
+        attach="material"
+        color="white"
+        transparent
+        roughness={0.1}
+        metalness={0.1}
       />
-    )
-  }
+    </mesh>
+  );
+}
+// Lights
+function KeyLight({ brightness, color }) {
+  return (
+    <rectAreaLight
+      width={3}
+      height={3}
+      color={color}
+      intensity={brightness}
+      position={[-2, 0, 5]}
+      lookAt={[0, 0, 0]}
+      penumbra={1}
+      castShadow
+    />
+  );
+}
+function FillLight({ brightness, color }) {
+  return (
+    <rectAreaLight
+      width={3}
+      height={3}
+      intensity={brightness}
+      color={color}
+      position={[2, 1, 4]}
+      lookAt={[0, 0, 0]}
+      penumbra={2}
+      castShadow
+    />
+  );
+}
+function RimLight({ brightness, color }) {
+  return (
+    <rectAreaLight
+      width={2}
+      height={2}
+      intensity={brightness}
+      color={color}
+      position={[1, 4, -2]}
+      rotation={[0, 180, 0]}
+      castShadow
+    />
+  );
 }
 
-export default Viewer;
+
+//Camera
+
+const CameraControls = () => {
+  // Get a reference to the Three.js Camera, and the canvas html element.
+  // We need these to setup the OrbitControls component.
+  
+  const {
+    camera,
+    gl: { domElement },
+  } = useThree();
+  
+  // Ref to the controls, so that we can update them on every frame using useFrame
+  const controls = useRef();
+  useFrame((state) => controls.current.update());
+  return (
+    <orbitControls
+      ref={controls}
+      args={[camera, domElement]}
+      enableZoom={false}
+      maxAzimuthAngle={Math.PI / 4}
+      maxPolarAngle={Math.PI}
+      minAzimuthAngle={-Math.PI / 4}
+      minPolarAngle={0}
+    />
+  );
+};
+
+
+
+
+export default function App() {
+  return (
+    <Canvas className="canvas">
+    <CameraControls />
+    <GroundPlane />
+    <BackDrop />
+    <KeyLight brightness={5.6} color="#ffbdf4" />
+    <FillLight brightness={2.6} color="#bdefff" />
+    <RimLight brightness={54} color="#fff" />
+    <Sphere />
+  </Canvas>
+  )
+}
