@@ -117,16 +117,16 @@ export default function App() {
     <hemisphereLight intensity={0.35} />
     <spotLight position={[30, 0, 30]} angle={0.3} penumbra={1} intensity={2} castShadow shadow-mapSize-width={256} shadow-mapSize-height={256} />
     <pointLight position={[-30, 0, -30]} intensity={0.5} />
-    <Physics gravity={[0, 0, -30]} 
+    <Physics gravity={[0, 0, -20]} 
           iterations={20}
           tolerance={0.0001}
           defaultContactMaterial={{
             friction: 1,
             restitution: 0.7,
             contactEquationStiffness: 1e7,
-            contactEquationRelaxation: 1,
+            contactEquationRelaxation: 10,
             frictionEquationStiffness: 1e7,
-            frictionEquationRelaxation: 2,
+            frictionEquationRelaxation: 10,
           }}
           
           allowSleep={false}>
